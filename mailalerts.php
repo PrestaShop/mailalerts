@@ -46,7 +46,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.2.5';
+		$this->version = '3.2.6';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -64,7 +64,7 @@ class MailAlerts extends Module
 
 	private function init()
 	{
-		$this->_merchant_mails = strval(Configuration::get('MA_MERCHANT_MAILS'));
+		$this->_merchant_mails = str_replace(',', self::__MA_MAIL_DELIMITOR__, strval(Configuration::get('MA_MERCHANT_MAILS')));
 		$this->_merchant_order = (int)Configuration::get('MA_MERCHANT_ORDER');
 		$this->_merchant_oos = (int)Configuration::get('MA_MERCHANT_OOS');
 		$this->_customer_qty = (int)Configuration::get('MA_CUSTOMER_QTY');
@@ -173,7 +173,8 @@ class MailAlerts extends Module
 				$errors[] = $this->l('Please type one (or more) e-mail address');
 			else
 			{
-				$emails = explode("\n", $emails);
+				$emails = str_replace(',', self::__MA_MAIL_DELIMITOR__, $emails);
+				$emails = explode(self::__MA_MAIL_DELIMITOR__, $emails);
 				foreach ($emails as $k => $email)
 				{
 					$email = trim($email);
