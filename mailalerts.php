@@ -46,7 +46,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.2.6';
+		$this->version = '3.2.7';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -59,7 +59,7 @@ class MailAlerts extends Module
 		$this->displayName = $this->l('Mail alerts');
 		$this->description = $this->l('Sends e-mail notifications to customers and merchants.');
 		$this->confirmUninstall = $this->l('Are you sure you want to delete all customer notifications?');
-		$this->ps_versions_compliancy = array('min' => '1.5.6.1', 'max' => _PS_VERSION_);
+		$this->ps_versions_compliancy = array('min' => '1.5.0.17', 'max' => _PS_VERSION_);
 	}
 
 	private function init()
