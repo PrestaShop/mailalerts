@@ -38,7 +38,7 @@ function oosHookJsCodeMailAlert() {
 		url: "{/literal}{$link->getModuleLink('mailalerts', 'actions', ['process' => 'check'])}{literal}",
 		data: 'id_product={/literal}{$id_product}{literal}&id_product_attribute='+$('#idCombination').val(),
 		success: function (msg) {
-			if (msg == '0') {
+			if ($.trim(msg) == '0') {
 				$('#mailalert_link').show();
 				$('#oos_customer_email').show();
 			}
@@ -56,13 +56,13 @@ function  addNotification() {
 		url: "{/literal}{$link->getModuleLink('mailalerts', 'actions', ['process' => 'add'])}{literal}",
 		data: 'id_product={/literal}{$id_product}{literal}&id_product_attribute='+$('#idCombination').val()+'&customer_email='+$('#oos_customer_email').val()+'',
 		success: function (msg) {
-			if (msg == '1') {
+			if ($.trim(msg) == '1') {
 				$('#mailalert_link').hide();
 				$('#oos_customer_email').hide();
 				$('#oos_customer_email_result').html("{/literal}{l s='Request notification registered' mod='mailalerts'}{literal}");
 				$('#oos_customer_email_result').css('color', 'green').show();
 			}
-			else if (msg == '2' ) {
+			else if ($.trim(msg) == '2' ) {
 				$('#oos_customer_email_result').html("{/literal}{l s='You already have an alert for this product' mod='mailalerts'}{literal}");
 				$('#oos_customer_email_result').css('color', 'red').show();
 			} else {
