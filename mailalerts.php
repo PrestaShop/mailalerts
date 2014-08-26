@@ -334,7 +334,7 @@ class MailAlerts extends Module
 				),
 			'{invoice_block_html}' => MailAlert::getFormatedAddress(
 					$invoice, '<br />', array(
-						'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].' font-weight:bold;">%s</span>',
+						'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
 						'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
 					)
 				),
