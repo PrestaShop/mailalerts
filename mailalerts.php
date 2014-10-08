@@ -725,7 +725,7 @@ class MailAlerts extends Module
 						'is_bool' => true, //retro compat 1.5
 						'label' => $this->l('Coverage warning'),
 						'name' => 'MA_MERCHANT_COVERAGE',
-						'desc' => $this->l('Receive a notification when an order is placed.'),
+						'desc' => $this->l('Receive a notification when a product is out of coverage.'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
