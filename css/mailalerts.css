@@ -42,6 +42,6 @@
 
 #usefull_link_block li#mailalerts_block_extra_remove {
 	padding-left:20px;
-	background:url(img/del_alert.gif) no-repeat 0 0;
+	background:url(../img/del_alert.gif) no-repeat 0 0;
 	cursor: pointer;
 }

@@ -1,28 +1,28 @@
 <?php
-/*
-* 2007-2014 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+/**
+ * 2007-2015 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ * @author    PrestaShop SA <contact@prestashop.com>
+ * @copyright 2007-2015 PrestaShop SA
+ * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * International Registered Trademark & Property of PrestaShop SA
+ */
 
 class MailAlert extends ObjectModel
 {
@@ -65,7 +65,7 @@ class MailAlert extends ObjectModel
 		$customer = new Customer($id_customer);
 		$customer_email = $customer->email;
 		$guest_email = pSQL($guest_email);
-		
+
 		$id_customer = (int)$id_customer;
 		$customer_email = pSQL($customer_email);
 		$where = $id_customer == 0 ? "customer_email = '$guest_email'" : "(id_customer=$id_customer OR customer_email='$customer_email')";
@@ -80,7 +80,7 @@ class MailAlert extends ObjectModel
 		return count(Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql));
 	}
 
-	public static function deleteAlert($id_customer, $customer_email, $id_product, $id_product_attribute, $id_shop)
+	public static function deleteAlert($id_customer, $customer_email, $id_product, $id_product_attribute, $id_shop = null)
 	{
 		$sql = '
 			DELETE FROM `'._DB_PREFIX_.self::$definition['table'].'`
@@ -88,7 +88,7 @@ class MailAlert extends ObjectModel
 				'`customer_email` = \''.pSQL($customer_email).'\'').
 			' AND `id_product` = '.(int)$id_product.'
 			AND `id_product_attribute` = '.(int)$id_product_attribute.'
-			AND `id_shop` = '.(int)Context::getContext()->shop->id;
+			AND `id_shop` = '.($id_shop != null ? (int)$id_shop :(int)Context::getContext()->shop->id);
 
 		return Db::getInstance()->execute($sql);
 	}
@@ -125,7 +125,7 @@ class MailAlert extends ObjectModel
 
 				if ($attributes)
 				{
-					foreach ($attributes as $k => $row)
+					foreach ($attributes as $row)
 						$products[$i]['attributes_small'] .= $row['attribute_name'].', ';
 				}
 
@@ -135,27 +135,23 @@ class MailAlert extends ObjectModel
 				/* Get cover */
 				$attrgrps = $obj->getAttributesGroups((int)$id_lang);
 				foreach ($attrgrps as $attrgrp)
-				{
 					if ($attrgrp['id_product_attribute'] == (int)$products[$i]['id_product_attribute']
-					    && $images = Product::_getAttributeImageAssociations((int)$attrgrp['id_product_attribute']))
+						&& $images = Product::_getAttributeImageAssociations((int)$attrgrp['id_product_attribute']))
 					{
 						$products[$i]['cover'] = $obj->id.'-'.array_pop($images);
 						break;
 					}
-				}
 			}
 
 			if (!isset($products[$i]['cover']) || !$products[$i]['cover'])
 			{
 				$images = $obj->getImages((int)$id_lang);
-				foreach ($images as $k => $image)
-				{
+				foreach ($images as $image)
 					if ($image['cover'])
 					{
 						$products[$i]['cover'] = $obj->id.'-'.$image['id_image'];
 						break;
 					}
-				}
 			}
 
 			if (!isset($products[$i]['cover']))
@@ -173,21 +169,21 @@ class MailAlert extends ObjectModel
 		$link = new Link();
 		$context = Context::getContext()->cloneContext();
 		$customers = self::getCustomers($id_product, $id_product_attribute);
-		
+
 		foreach ($customers as $customer)
 		{
 			$id_shop = (int)$customer['id_shop'];
 			$id_lang = (int)$customer['id_lang'];
 			$context->shop->id = $id_shop;
 			$context->language->id = $id_lang;
-			
+
 			$product = new Product((int)$id_product, false, $id_lang, $id_shop);
 			$product_link = $link->getProductLink($product, $product->link_rewrite, null, null, $id_lang, $id_shop);
-			$templateVars = array(
+			$template_vars = array(
 				'{product}' => (is_array($product->name) ? $product->name[$id_lang] : $product->name),
 				'{product_link}' => $product_link
 			);
-			
+
 			if ($customer['id_customer'])
 			{
 				$customer = new Customer((int)$customer['id_customer']);
@@ -199,30 +195,36 @@ class MailAlert extends ObjectModel
 				$customer_id = 0;
 				$customer_email = $customer['customer_email'];
 			}
-			
+
 			$iso = Language::getIsoById($id_lang);
-			
+
 			if (file_exists(dirname(__FILE__).'/mails/'.$iso.'/customer_qty.txt') &&
 				file_exists(dirname(__FILE__).'/mails/'.$iso.'/customer_qty.html'))
 				Mail::Send(
-					$id_lang, 
-					'customer_qty', 
-					Mail::l('Product available', $id_lang), 
-					$templateVars, 
-					strval($customer_email), 
-					NULL, 
-					strval(Configuration::get('PS_SHOP_EMAIL', null, null, $id_shop)), 
-					strval(Configuration::get('PS_SHOP_NAME', null, null, $id_shop)), 
-					NULL, 
-					NULL, 
+					$id_lang,
+					'customer_qty',
+					Mail::l('Product available', $id_lang),
+					$template_vars,
+					(string)$customer_email,
+					null,
+					(string)Configuration::get('PS_SHOP_EMAIL', null, null, $id_shop),
+					(string)Configuration::get('PS_SHOP_NAME', null, null, $id_shop),
+					null,
+					null,
 					dirname(__FILE__).'/mails/',
 					false,
 					$id_shop
 				);
 
-			Hook::exec('actionModuleMailAlertSendCustomer', array('product' => (is_array($product->name) ? $product->name[$id_lang] : $product->name), 'link' => $product_link, 'customer' => $customer, 'product_obj' => $product));
+			Hook::exec(
+				'actionModuleMailAlertSendCustomer',
+				array('product' => (is_array($product->name) ? $product->name[$id_lang] : $product->name),
+				'link' => $product_link,
+				'customer' => $customer,
+				'product_obj' => $product)
+			);
 
-			self::deleteAlert((int)$customer_id, strval($customer_email), (int)$id_product, (int)$id_product_attribute, $id_shop);
+			self::deleteAlert((int)$customer_id, (string)$customer_email, (int)$id_product, (int)$id_product_attribute, $id_shop);
 		}
 	}
 
@@ -239,12 +241,14 @@ class MailAlert extends ObjectModel
 	 */
 	public static function getProducts($customer, $id_lang)
 	{
+		$list_shop_ids = Shop::getContextListShopID(false);
+
 		$sql = '
 			SELECT ma.`id_product`, p.`quantity` AS product_quantity, pl.`name`, ma.`id_product_attribute`
 			FROM `'._DB_PREFIX_.self::$definition['table'].'` ma
 			JOIN `'._DB_PREFIX_.'product` p ON (p.`id_product` = ma.`id_product`)
 			'.Shop::addSqlAssociation('product', 'p').'
-			LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (pl.`id_product` = p.`id_product` AND pl.id_shop IN ('.implode(', ', Shop::getContextListShopID(false)).'))
+			LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (pl.`id_product` = p.`id_product` AND pl.id_shop IN ('.implode(', ', $list_shop_ids).'))
 			WHERE product_shop.`active` = 1
 			AND (ma.`id_customer` = '.(int)$customer->id.' OR ma.`customer_email` = \''.pSQL($customer->email).'\')
 			AND pl.`id_lang` = '.(int)$id_lang.Shop::addSqlRestriction(false, 'ma');
@@ -283,5 +287,4 @@ class MailAlert extends ObjectModel
 
 		return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 	}
-
 }
