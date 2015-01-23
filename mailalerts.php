@@ -1,28 +1,28 @@
 <?php
-/*
-* 2007-2014 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+/**
+ * 2007-2015 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ * @author    PrestaShop SA <contact@prestashop.com>
+ * @copyright 2007-2015 PrestaShop SA
+ * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * International Registered Trademark & Property of PrestaShop SA
+ */
 
 if (!defined('_CAN_LOAD_FILES_'))
 	exit;
@@ -31,14 +31,14 @@ include_once(dirname(__FILE__).'/MailAlert.php');
 
 class MailAlerts extends Module
 {
-	private $_html = '';
+	private $html = '';
 
-	private $_merchant_mails;
-	private $_merchant_order;
-	private $_merchant_oos;
-	private $_customer_qty;
-	private $_merchant_coverage;
-	private $_product_coverage;
+	private $merchant_mails;
+	private $merchant_order;
+	private $merchant_oos;
+	private $customer_qty;
+	private $merchant_coverage;
+	private $product_coverage;
 
 	const __MA_MAIL_DELIMITOR__ = "\n";
 
@@ -46,7 +46,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.4.4';
+		$this->version = '3.4.5';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -65,12 +65,12 @@ class MailAlerts extends Module
 
 	private function init()
 	{
-		$this->_merchant_mails = str_replace(',', self::__MA_MAIL_DELIMITOR__, strval(Configuration::get('MA_MERCHANT_MAILS')));
-		$this->_merchant_order = (int)Configuration::get('MA_MERCHANT_ORDER');
-		$this->_merchant_oos = (int)Configuration::get('MA_MERCHANT_OOS');
-		$this->_customer_qty = (int)Configuration::get('MA_CUSTOMER_QTY');
-		$this->_merchant_coverage = (int)Configuration::getGlobalValue('MA_MERCHANT_COVERAGE');
-		$this->_product_coverage = (int)Configuration::getGlobalValue('MA_PRODUCT_COVERAGE');
+		$this->merchant_mails = str_replace(',', self::__MA_MAIL_DELIMITOR__, (string)Configuration::get('MA_MERCHANT_MAILS'));
+		$this->merchant_order = (int)Configuration::get('MA_MERCHANT_ORDER');
+		$this->merchant_oos = (int)Configuration::get('MA_MERCHANT_OOS');
+		$this->customer_qty = (int)Configuration::get('MA_CUSTOMER_QTY');
+		$this->merchant_coverage = (int)Configuration::getGlobalValue('MA_MERCHANT_COVERAGE');
+		$this->product_coverage = (int)Configuration::getGlobalValue('MA_PRODUCT_COVERAGE');
 	}
 
 	public function install($delete_params = true)
@@ -85,8 +85,7 @@ class MailAlerts extends Module
 			!$this->registerHook('actionProductAttributeDelete') ||
 			!$this->registerHook('actionProductAttributeUpdate') ||
 			!$this->registerHook('actionProductCoverage') ||
-			!$this->registerHook('displayHeader')
-		)
+			!$this->registerHook('displayHeader'))
 			return false;
 
 		if ($delete_params)
@@ -148,16 +147,16 @@ class MailAlerts extends Module
 
 	public function getContent()
 	{
-		$this->_html = '';
+		$this->html = '';
 
-		$this->_postProcess();
+		$this->postProcess();
 
-		$this->_html .= $this->renderForm();
+		$this->html .= $this->renderForm();
 
-		return $this->_html;
+		return $this->html;
 	}
 
-	private function _postProcess()
+	private function postProcess()
 	{
 		$errors = array();
 
@@ -168,7 +167,7 @@ class MailAlerts extends Module
 		}
 		else if (Tools::isSubmit('submitMAMerchant'))
 		{
-			$emails = strval(Tools::getValue('MA_MERCHANT_MAILS'));
+			$emails = (string)Tools::getValue('MA_MERCHANT_MAILS');
 
 			if (!$emails || empty($emails))
 				$errors[] = $this->l('Please type one (or more) e-mail address');
@@ -192,7 +191,7 @@ class MailAlerts extends Module
 
 				$emails = implode(self::__MA_MAIL_DELIMITOR__, $emails);
 
-				if (!Configuration::updateValue('MA_MERCHANT_MAILS', strval($emails)))
+				if (!Configuration::updateValue('MA_MERCHANT_MAILS', (string)$emails))
 					$errors[] = $this->l('Cannot update settings');
 				elseif (!Configuration::updateValue('MA_MERCHANT_ORDER', (int)Tools::getValue('MA_MERCHANT_ORDER')))
 					$errors[] = $this->l('Cannot update settings');
@@ -208,35 +207,30 @@ class MailAlerts extends Module
 		}
 
 		if (count($errors) > 0)
-			$this->_html .= $this->displayError(implode('<br />', $errors));
+			$this->html .= $this->displayError(implode('<br />', $errors));
 		else
-			$this->_html .= $this->displayConfirmation($this->l('Settings updated successfully'));
+			$this->html .= $this->displayConfirmation($this->l('Settings updated successfully'));
 
 		$this->init();
 	}
 
 	public function getAllMessages($id)
 	{
-		$messages = Db::getInstance()->executeS(
-			'
-						SELECT `message`
-						FROM `'._DB_PREFIX_.'message`
+		$messages = Db::getInstance()->executeS('
+			SELECT `message`
+			FROM `'._DB_PREFIX_.'message`
 			WHERE `id_order` = '.(int)$id.'
-			ORDER BY `id_message` ASC
-		'
-		);
+			ORDER BY `id_message` ASC');
 		$result = array();
 		foreach ($messages as $message)
-		{
 			$result[] = $message['message'];
-		}
 
 		return implode('<br/>', $result);
 	}
 
 	public function hookActionValidateOrder($params)
 	{
-		if (!$this->_merchant_order || empty($this->_merchant_mails))
+		if (!$this->merchant_order || empty($this->merchant_mails))
 			return;
 
 		// Getting differents vars
@@ -300,12 +294,16 @@ class MailAlerts extends Module
 					<td style="padding:0.6em 0.4em;">'.$product['product_reference'].'</td>
 					<td style="padding:0.6em 0.4em;">
 						<strong>'
-				.$product['product_name'].(isset($product['attributes_small']) ? ' '.$product['attributes_small'] : '').(!empty($customization_text) ? '<br />'.$customization_text : '').
-				'</strong>
-			</td>
-			<td style="padding:0.6em 0.4em; text-align:right;">'.Tools::displayPrice($unit_price, $currency, false).'</td>
+							.$product['product_name']
+							.(isset($product['attributes_small']) ? ' '.$product['attributes_small'] : '')
+							.(!empty($customization_text) ? '<br />'.$customization_text : '')
+						.'</strong>
+					</td>
+					<td style="padding:0.6em 0.4em; text-align:right;">'.Tools::displayPrice($unit_price, $currency, false).'</td>
 					<td style="padding:0.6em 0.4em; text-align:center;">'.(int)$product['product_quantity'].'</td>
-					<td style="padding:0.6em 0.4em; text-align:right;">'.Tools::displayPrice(($unit_price * $product['product_quantity']), $currency, false).'</td>
+					<td style="padding:0.6em 0.4em; text-align:right;">'
+						.Tools::displayPrice(($unit_price * $product['product_quantity']), $currency, false)
+					.'</td>
 				</tr>';
 		}
 		foreach ($params['order']->getCartRules() as $discount)
@@ -372,7 +370,11 @@ class MailAlerts extends Module
 			'{total_products}' => Tools::displayPrice($order->getTotalProductsWithTaxes(), $currency),
 			'{total_discounts}' => Tools::displayPrice($order->total_discounts, $currency),
 			'{total_shipping}' => Tools::displayPrice($order->total_shipping, $currency),
-			'{total_tax_paid}' => Tools::displayPrice(($order->total_products_wt - $order->total_products) + ($order->total_shipping_tax_incl - $order->total_shipping_tax_excl), $currency, false),
+			'{total_tax_paid}' => Tools::displayPrice(
+					($order->total_products_wt - $order->total_products) + ($order->total_shipping_tax_incl - $order->total_shipping_tax_excl),
+					$currency,
+					false
+				),
 			'{total_wrapping}' => Tools::displayPrice($order->total_wrapping, $currency),
 			'{currency}' => $currency->sign,
 			'{message}' => $message
@@ -381,20 +383,18 @@ class MailAlerts extends Module
 		$iso = Language::getIsoById($id_lang);
 		$dir_mail = false;
 		if (file_exists(dirname(__FILE__).'/mails/'.$iso.'/new_order.txt') &&
-			file_exists(dirname(__FILE__).'/mails/'.$iso.'/new_order.html')
-		)
+			file_exists(dirname(__FILE__).'/mails/'.$iso.'/new_order.html'))
 			$dir_mail = dirname(__FILE__).'/mails/';
+
 		// Send 1 email by merchant mail, because Mail::Send doesn't work with an array of recipients
-		$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->_merchant_mails);
+		$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->merchant_mails);
 
 		if (file_exists(_PS_MAIL_DIR_.$iso.'/new_order.txt') &&
-			file_exists(_PS_MAIL_DIR_.$iso.'/new_order.html')
-		)
+			file_exists(_PS_MAIL_DIR_.$iso.'/new_order.html'))
 			$dir_mail = _PS_MAIL_DIR_;
 
 		if ($dir_mail)
 			foreach ($merchant_mails as $merchant_mail)
-			{
 				Mail::Send(
 					$id_lang,
 					'new_order',
@@ -410,12 +410,13 @@ class MailAlerts extends Module
 					null,
 					$id_shop
 				);
-			}
 	}
 
 	public function hookActionProductOutOfStock($params)
 	{
-		if (!$this->_customer_qty || !Configuration::get('PS_STOCK_MANAGEMENT') || Product::isAvailableWhenOutOfStock($params['product']->out_of_stock))
+		if (!$this->customer_qty ||
+			!Configuration::get('PS_STOCK_MANAGEMENT') ||
+			Product::isAvailableWhenOutOfStock($params['product']->out_of_stock))
 			return;
 
 		$context = Context::getContext();
@@ -461,7 +462,11 @@ class MailAlerts extends Module
 
 		$check_oos = ($product_has_attributes && $id_product_attribute) || (!$product_has_attributes && !$id_product_attribute);
 
-		if ($check_oos && $product->active == 1 && (int)$quantity <= $ma_last_qties && !(!$this->_merchant_oos || empty($this->_merchant_mails)) && $configuration['PS_STOCK_MANAGEMENT'])
+		if ($check_oos &&
+			$product->active == 1 &&
+			(int)$quantity <= $ma_last_qties &&
+			!(!$this->merchant_oos || empty($this->merchant_mails)) &&
+			$configuration['PS_STOCK_MANAGEMENT'])
 		{
 			$iso = Language::getIsoById($id_lang);
 			$product_name = Product::getProductName($id_product, $id_product_attribute, $id_lang);
@@ -471,12 +476,13 @@ class MailAlerts extends Module
 				'{product}' => $product_name
 			);
 
-			if (file_exists(dirname(__FILE__).'/mails/'.$iso.'/productoutofstock.txt') &&
-				file_exists(dirname(__FILE__).'/mails/'.$iso.'/productoutofstock.html')
-			)
+			// Do not send mail if multiples product are created / imported.
+			if (!defined('PS_MASS_PRODUCT_CREATION') &&
+				file_exists(dirname(__FILE__).'/mails/'.$iso.'/productoutofstock.txt') &&
+				file_exists(dirname(__FILE__).'/mails/'.$iso.'/productoutofstock.html'))
 			{
 				// Send 1 email by merchant mail, because Mail::Send doesn't work with an array of recipients
-				$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->_merchant_mails);
+				$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->merchant_mails);
 				foreach ($merchant_mails as $merchant_mail)
 				{
 					Mail::Send(
@@ -486,8 +492,8 @@ class MailAlerts extends Module
 						$template_vars,
 						$merchant_mail,
 						null,
-						strval($configuration['PS_SHOP_EMAIL']),
-						strval($configuration['PS_SHOP_NAME']),
+						(string)$configuration['PS_SHOP_EMAIL'],
+						(string)$configuration['PS_SHOP_NAME'],
 						null,
 						null,
 						dirname(__FILE__).'/mails/',
@@ -498,7 +504,7 @@ class MailAlerts extends Module
 			}
 		}
 
-		if ($this->_customer_qty && $quantity > 0)
+		if ($this->customer_qty && $quantity > 0)
 			MailAlert::sendCustomerAlert((int)$product->id, (int)$params['id_product_attribute']);
 	}
 
@@ -511,13 +517,13 @@ class MailAlerts extends Module
 
 		$result = Db::getInstance()->getRow($sql);
 
-		if ($this->_customer_qty && $result['quantity'] > 0)
+		if ($this->customer_qty && $result['quantity'] > 0)
 			MailAlert::sendCustomerAlert((int)$result['id_product'], (int)$params['id_product_attribute']);
 	}
 
-	public function hookDisplayCustomerAccount($params)
+	public function hookDisplayCustomerAccount()
 	{
-		return $this->_customer_qty ? $this->display(__FILE__, 'my-account.tpl') : null;
+		return $this->customer_qty ? $this->display(__FILE__, 'my-account.tpl') : null;
 	}
 
 	public function hookDisplayMyAccountBlock($params)
@@ -580,9 +586,8 @@ class MailAlerts extends Module
 
 		// if we need to send a notification
 		if ($product->active == 1 &&
-			($coverage < $warning_coverage) && !empty($this->_merchant_mails) &&
-			Configuration::getGlobalValue('MA_MERCHANT_COVERAGE')
-		)
+			($coverage < $warning_coverage) && !empty($this->merchant_mails) &&
+			Configuration::getGlobalValue('MA_MERCHANT_COVERAGE'))
 		{
 			$context = Context::getContext();
 			$id_lang = (int)$context->language->id;
@@ -596,11 +601,10 @@ class MailAlerts extends Module
 			);
 
 			if (file_exists(dirname(__FILE__).'/mails/'.$iso.'/productcoverage.txt') &&
-				file_exists(dirname(__FILE__).'/mails/'.$iso.'/productcoverage.html')
-			)
+				file_exists(dirname(__FILE__).'/mails/'.$iso.'/productcoverage.html'))
 			{
 				// Send 1 email by merchant mail, because Mail::Send doesn't work with an array of recipients
-				$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->_merchant_mails);
+				$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->merchant_mails);
 				foreach ($merchant_mails as $merchant_mail)
 				{
 					Mail::Send(
@@ -610,8 +614,8 @@ class MailAlerts extends Module
 						$template_vars,
 						$merchant_mail,
 						null,
-						strval(Configuration::get('PS_SHOP_EMAIL')),
-						strval(Configuration::get('PS_SHOP_NAME')),
+						(string)Configuration::get('PS_SHOP_EMAIL'),
+						(string)Configuration::get('PS_SHOP_NAME'),
 						null,
 						null,
 						dirname(__FILE__).'/mails/',
@@ -623,13 +627,13 @@ class MailAlerts extends Module
 		}
 	}
 
-	public function hookDisplayHeader($params)
+	public function hookDisplayHeader()
 	{
 		$this->page_name = Dispatcher::getInstance()->getController();
 		if (in_array($this->page_name, array('product', 'account')))
 		{
-			$this->context->controller->addJS($this->_path.'mailalerts.js');
-			$this->context->controller->addCSS($this->_path.'mailalerts.css', 'all');
+			$this->context->controller->addJS($this->_path.'js/mailalerts.js');
+			$this->context->controller->addCSS($this->_path.'css/mailalerts.css', 'all');
 		}
 	}
 
@@ -765,7 +769,6 @@ class MailAlerts extends Module
 			),
 		);
 
-
 		$helper = new HelperForm();
 		$helper->show_toolbar = false;
 		$helper->table = $this->table;
@@ -775,7 +778,10 @@ class MailAlerts extends Module
 		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
 		$helper->identifier = $this->identifier;
 		$helper->submit_action = 'submitMailAlertConfiguration';
-		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+				.'&configure='.$this->name
+				.'&tab_module='.$this->tab
+				.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 		$helper->tpl_vars = array(
 			'fields_value' => $this->getConfigFieldsValues(),

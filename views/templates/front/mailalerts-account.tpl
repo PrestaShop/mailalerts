@@ -1,5 +1,5 @@
 {*
-* 2007-2014 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -17,10 +17,10 @@
 * versions in the future. If you wish to customize PrestaShop for your
 * needs please refer to http://www.prestashop.com for more information.
 *
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
+* @author    PrestaShop SA <contact@prestashop.com>
+* @copyright 2007-2015 PrestaShop SA
+* @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+* International Registered Trademark & Property of PrestaShop SA
 *}
 
 <script type="text/javascript">
@@ -70,7 +70,7 @@ $('document').ready(function()
 				<div class="product_desc">{$mailAlert.attributes_small|escape:'html':'UTF-8'}</div>
 
 				<div class="remove">
-					<img rel="ajax_id_mailalert_{$mailAlert.id_product}_{$mailAlert.id_product_attribute}" src="{$img_dir}icon/delete.gif" alt="{l s='Remove' mod='mailalerts'}" class="icon" />
+					<img rel="ajax_id_mailalert_{$mailAlert.id_product|intval}_{$mailAlert.id_product_attribute|intval}" src="{$img_dir}icon/delete.gif" alt="{l s='Remove' mod='mailalerts'}" class="icon" />
 				</div>
 			</div>
 			{/foreach}

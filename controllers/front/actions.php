@@ -1,28 +1,28 @@
 <?php
-/*
-* 2007-2014 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+/**
+ * 2007-2015 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ * @author    PrestaShop SA <contact@prestashop.com>
+ * @copyright 2007-2015 PrestaShop SA
+ * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * International Registered Trademark & Property of PrestaShop SA
+ */
 
 /**
  * @since 1.5.0
@@ -65,9 +65,15 @@ class MailalertsActionsModuleFrontController extends ModuleFrontController
 			die('0');
 
 		$context = Context::getContext();
-		if (MailAlert::deleteAlert((int)$context->customer->id, (int)$context->customer->email, (int)$product->id, (int)$this->id_product_attribute, (int)$context->shop->id))
+		if (MailAlert::deleteAlert(
+			(int)$context->customer->id,
+			(int)$context->customer->email,
+			(int)$product->id,
+			(int)$this->id_product_attribute,
+			(int)$context->shop->id
+		))
 			die('0');
-		
+
 		die(1);
 	}
 
@@ -77,43 +83,43 @@ class MailalertsActionsModuleFrontController extends ModuleFrontController
 	public function processAdd()
 	{
 		$context = Context::getContext();
-		
+
 		if ($context->customer->isLogged())
 		{
-		    $id_customer = (int)$context->customer->id;
-		    $customer = new Customer($id_customer);
-		    $customer_email = strval($customer->email);
+			$id_customer = (int)$context->customer->id;
+			$customer = new Customer($id_customer);
+			$customer_email = (string)$customer->email;
 		}
 		else
 		{
-		    $customer_email = strval(Tools::getValue('customer_email'));
-		    $customer = $context->customer->getByEmail($customer_email);
-		    $id_customer = (isset($customer->id) && ($customer->id != null)) ? (int)$customer->id : null;
+			$customer_email = (string)Tools::getValue('customer_email');
+			$customer = $context->customer->getByEmail($customer_email);
+			$id_customer = (isset($customer->id) && ($customer->id != null)) ? (int)$customer->id : null;
 		}
-		
+
 		$id_product = (int)Tools::getValue('id_product');
 		$id_product_attribute = (int)Tools::getValue('id_product_attribute');
 		$id_shop = (int)$context->shop->id;
 		$id_lang = (int)$context->language->id;
 		$product = new Product($id_product, false, $id_lang, $id_shop, $context);
 
-		$mailAlert = MailAlert::customerHasNotification($id_customer, $id_product, $id_product_attribute, $id_shop, null, $customer_email);
+		$mail_alert = MailAlert::customerHasNotification($id_customer, $id_product, $id_product_attribute, $id_shop, null, $customer_email);
 
-		if ($mailAlert)
-		    die('2');
+		if ($mail_alert)
+			die('2');
 		elseif (!Validate::isLoadedObject($product))
-		    die('0');
+			die('0');
 
-		$mailAlert = new MailAlert();
+		$mail_alert = new MailAlert();
 
-		$mailAlert->id_customer = (int)$id_customer;
-		$mailAlert->customer_email = strval($customer_email);
-		$mailAlert->id_product = (int)$id_product;
-		$mailAlert->id_product_attribute = (int)$id_product_attribute;
-		$mailAlert->id_shop = (int)$id_shop;
-		$mailAlert->id_lang = (int)$id_lang;
+		$mail_alert->id_customer = (int)$id_customer;
+		$mail_alert->customer_email = (string)$customer_email;
+		$mail_alert->id_product = (int)$id_product;
+		$mail_alert->id_product_attribute = (int)$id_product_attribute;
+		$mail_alert->id_shop = (int)$id_shop;
+		$mail_alert->id_lang = (int)$id_lang;
 
-		if ($mailAlert->add() !== false)
+		if ($mail_alert->add() !== false)
 			die('1');
 
 		die('0');
@@ -129,10 +135,10 @@ class MailalertsActionsModuleFrontController extends ModuleFrontController
 
 		$id_customer = (int)$this->context->customer->id;
 
-		if (!$id_product = (int)(Tools::getValue('id_product')))
+		if (!$id_product = (int)Tools::getValue('id_product'))
 			die('0');
 
-		$id_product_attribute = (int)(Tools::getValue('id_product_attribute'));
+		$id_product_attribute = (int)Tools::getValue('id_product_attribute');
 
 		if (MailAlert::customerHasNotification((int)$id_customer, (int)$id_product, (int)$id_product_attribute, (int)$this->context->shop->id))
 			die('1');
