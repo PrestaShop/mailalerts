@@ -380,25 +380,46 @@ class MailAlerts extends Module
 			'{message}' => $message
 		);
 
-		$iso = Language::getIsoById($id_lang);
-		$dir_mail = false;
-		if (file_exists(dirname(__FILE__).'/mails/'.$iso.'/new_order.txt') &&
-			file_exists(dirname(__FILE__).'/mails/'.$iso.'/new_order.html'))
-			$dir_mail = dirname(__FILE__).'/mails/';
+		// Shop iso
+		$iso = Language::getIsoById((int)Configuration::get('PS_LANG_DEFAULT'));
 
 		// Send 1 email by merchant mail, because Mail::Send doesn't work with an array of recipients
 		$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->merchant_mails);
+		foreach ($merchant_mails as $merchant_mail)
+		{
+			// Default language
+			$mail_id_lang = $id_lang;
+			$mail_iso = $iso;
 
-		if (file_exists(_PS_MAIL_DIR_.$iso.'/new_order.txt') &&
-			file_exists(_PS_MAIL_DIR_.$iso.'/new_order.html'))
-			$dir_mail = _PS_MAIL_DIR_;
+			// Use the merchant lang if he exists as an employee
+			$results = Db::getInstance()->executeS('
+				SELECT `id_lang` FROM `'._DB_PREFIX_.'employee`
+				WHERE `email` = \''.pSQL($merchant_mail).'\'
+			');
+			if ($results)
+			{
+				$user_iso = Language::getIsoById((int)$results[0]['id_lang']);
+				if ($user_iso)
+				{
+					$mail_id_lang = (int)$results[0]['id_lang'];
+					$mail_iso = $user_iso;
+				}
+			}
 
-		if ($dir_mail)
-			foreach ($merchant_mails as $merchant_mail)
+			$dir_mail = false;
+			if (file_exists(dirname(__FILE__).'/mails/'.$mail_iso.'/new_order.txt') &&
+				file_exists(dirname(__FILE__).'/mails/'.$mail_iso.'/new_order.html'))
+				$dir_mail = dirname(__FILE__).'/mails/';
+
+			if (file_exists(_PS_MAIL_DIR_.$mail_iso.'/new_order.txt') &&
+				file_exists(_PS_MAIL_DIR_.$mail_iso.'/new_order.html'))
+				$dir_mail = _PS_MAIL_DIR_;
+
+			if ($dir_mail)
 				Mail::Send(
-					$id_lang,
+					$mail_id_lang,
 					'new_order',
-					sprintf(Mail::l('New order : #%d - %s', $id_lang), $order->id, $order->reference),
+					sprintf(Mail::l('New order : #%d - %s', $mail_id_lang), $order->id, $order->reference),
 					$template_vars,
 					$merchant_mail,
 					null,
@@ -410,6 +431,7 @@ class MailAlerts extends Module
 					null,
 					$id_shop
 				);
+		}
 	}
 
 	public function hookActionProductOutOfStock($params)
