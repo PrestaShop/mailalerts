@@ -267,7 +267,7 @@ class MailAlerts extends Module
 		Product::addCustomizationPrice($products, $customized_datas);
 		foreach ($products as $key => $product)
 		{
-			$unit_price = $product['product_price_wt'];
+			$unit_price = Product::getTaxCalculationMethod($customer->id) == PS_TAX_EXC ? $product['product_price'] : $product['product_price_wt'];
 
 			$customization_text = '';
 			if (isset($customized_datas[$product['product_id']][$product['product_attribute_id']]))
@@ -319,6 +319,11 @@ class MailAlerts extends Module
 		if ($invoice->id_state)
 			$invoice_state = new State((int)$invoice->id_state);
 
+		if (Product::getTaxCalculationMethod($customer->id) == PS_TAX_EXC)
+			$total_products = $order->getTotalProductsWithoutTaxes();
+		else
+			$total_products = $order->getTotalProductsWithTaxes();
+
 		// Filling-in vars for email
 		$template_vars = array(
 			'{firstname}' => $customer->firstname,
@@ -367,7 +372,7 @@ class MailAlerts extends Module
 			'{payment}' => Tools::substr($order->payment, 0, 32),
 			'{items}' => $items_table,
 			'{total_paid}' => Tools::displayPrice($order->total_paid, $currency),
-			'{total_products}' => Tools::displayPrice($order->getTotalProductsWithTaxes(), $currency),
+			'{total_products}' => Tools::displayPrice($total_products, $currency),
 			'{total_discounts}' => Tools::displayPrice($order->total_discounts, $currency),
 			'{total_shipping}' => Tools::displayPrice($order->total_shipping, $currency),
 			'{total_tax_paid}' => Tools::displayPrice(
