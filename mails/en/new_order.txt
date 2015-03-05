@@ -12,6 +12,8 @@ ORDER: {order_name} Placed on {date}
 
 PAYMENT: {payment} 
 
+ORDER STATUS: {order_status}
+
 REFERENCE
 
 PRODUCT
