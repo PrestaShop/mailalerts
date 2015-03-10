@@ -323,6 +323,8 @@ class MailAlerts extends Module
 			$total_products = $order->getTotalProductsWithoutTaxes();
 		else
 			$total_products = $order->getTotalProductsWithTaxes();
+		
+		$order_state = $params['orderStatus'];
 
 		// Filling-in vars for email
 		$template_vars = array(
@@ -366,6 +368,7 @@ class MailAlerts extends Module
 			'{invoice_phone}' => $invoice->phone ? $invoice->phone : $invoice->phone_mobile,
 			'{invoice_other}' => $invoice->other,
 			'{order_name}' => $order->reference,
+			'{order_status}' => $order_state->name,
 			'{shop_name}' => $configuration['PS_SHOP_NAME'],
 			'{date}' => $order_date_text,
 			'{carrier}' => (($carrier->name == '0') ? $configuration['PS_SHOP_NAME'] : $carrier->name),
