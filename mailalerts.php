@@ -46,7 +46,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.4.9';
+		$this->version = '3.5.0';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
