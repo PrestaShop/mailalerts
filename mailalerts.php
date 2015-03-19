@@ -289,8 +289,7 @@ class MailAlerts extends Module
 					$customization_text = preg_replace('/---<br \/>$/', '', $customization_text);
 			}
 
-        		$link = new Link();
-        		$url = $link->getProductLink($product['product_id']);
+        		$url = $context->link->getProductLink($product['product_id']);
 			$items_table .=
 				'<tr style="background-color:'.($key % 2 ? '#DDE2E6' : '#EBECEE').';">
 					<td style="padding:0.6em 0.4em;">'.$product['product_reference'].'</td>
