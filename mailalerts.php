@@ -385,6 +385,8 @@ class MailAlerts extends Module
 				),
 			'{total_wrapping}' => Tools::displayPrice($order->total_wrapping, $currency),
 			'{currency}' => $currency->sign,
+			'{gift}' => $order->gift ? 'Yes' : 'No',
+			'{gift_message}' => $order->gift_message,
 			'{message}' => $message
 		);
 
