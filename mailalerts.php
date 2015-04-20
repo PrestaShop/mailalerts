@@ -31,14 +31,14 @@ include_once(dirname(__FILE__).'/MailAlert.php');
 
 class MailAlerts extends Module
 {
-	private $html = '';
+	protected $html = '';
 
-	private $merchant_mails;
-	private $merchant_order;
-	private $merchant_oos;
-	private $customer_qty;
-	private $merchant_coverage;
-	private $product_coverage;
+	protected $merchant_mails;
+	protected $merchant_order;
+	protected $merchant_oos;
+	protected $customer_qty;
+	protected $merchant_coverage;
+	protected $product_coverage;
 
 	const __MA_MAIL_DELIMITOR__ = "\n";
 
@@ -63,7 +63,7 @@ class MailAlerts extends Module
 		$this->confirmUninstall = $this->l('Are you sure you want to delete all customer notifications?');
 	}
 
-	private function init()
+	protected function init()
 	{
 		$this->merchant_mails = str_replace(',', self::__MA_MAIL_DELIMITOR__, (string)Configuration::get('MA_MERCHANT_MAILS'));
 		$this->merchant_order = (int)Configuration::get('MA_MERCHANT_ORDER');
@@ -156,7 +156,7 @@ class MailAlerts extends Module
 		return $this->html;
 	}
 
-	private function postProcess()
+	protected function postProcess()
 	{
 		$errors = array();
 
