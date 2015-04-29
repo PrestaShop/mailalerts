@@ -90,6 +90,7 @@ class MailAlerts extends Module
 			!$this->registerHook('actionProductAttributeUpdate') ||
 			!$this->registerHook('actionProductCoverage') ||
 			!$this->registerHook('actionOrderReturn') ||
+			!$this->registerHook('actionOrderChanged') ||
 			!$this->registerHook('displayHeader'))
 			return false;
 
@@ -833,6 +834,36 @@ class MailAlerts extends Module
 					$id_shop
 				);
 		}
+	}
+
+
+	/**
+	 * Send a mail when an order is modified.
+	 *
+	 * @param array $params Hook params.
+	 */
+	public function hookActionOrderChanged($params)
+	{
+		if (!$this->order_changed || empty($this->order_changed))
+			return;
+
+		$order = $params['order'];
+
+		$data = array(
+			'{lastname}' => $order->getCustomer()->lastname,
+			'{firstname}' => $order->getCustomer()->firstname,
+			'{id_order}' => (int)$order->id,
+			'{order_name}' => $order->getUniqReference()
+		);
+
+		Mail::Send(
+			(int)$order->id_lang,
+			'order_changed',
+			Mail::l('Your order has been changed', (int)$order->id_lang),
+			$data,
+			$order->getCustomer()->email,
+			$order->getCustomer()->firstname.' '.$order->getCustomer()->lastname,
+			null, null, null, null, _PS_MAIL_DIR_, true, (int)$order->id_shop);
 	}
 
 	public function renderForm()
