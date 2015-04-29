@@ -46,7 +46,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.5.1';
+		$this->version = '3.5.2';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -323,7 +323,7 @@ class MailAlerts extends Module
 			$total_products = $order->getTotalProductsWithoutTaxes();
 		else
 			$total_products = $order->getTotalProductsWithTaxes();
-		
+
 		$order_state = $params['orderStatus'];
 
 		// Filling-in vars for email
