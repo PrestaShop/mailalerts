@@ -39,6 +39,8 @@ class MailAlerts extends Module
 	protected $customer_qty;
 	protected $merchant_coverage;
 	protected $product_coverage;
+	protected $order_changed;
+	protected $return_slip;
 
 	const __MA_MAIL_DELIMITOR__ = "\n";
 
@@ -71,6 +73,8 @@ class MailAlerts extends Module
 		$this->customer_qty = (int)Configuration::get('MA_CUSTOMER_QTY');
 		$this->merchant_coverage = (int)Configuration::getGlobalValue('MA_MERCHANT_COVERAGE');
 		$this->product_coverage = (int)Configuration::getGlobalValue('MA_PRODUCT_COVERAGE');
+		$this->order_changed = (int)Configuration::getGlobalValue('MA_ORDER_CHANGE');
+		$this->return_slip = (int)Configuration::getGlobalValue('MA_RETURN_SLIP');
 	}
 
 	public function install($delete_params = true)
@@ -93,6 +97,8 @@ class MailAlerts extends Module
 			Configuration::updateValue('MA_MERCHANT_ORDER', 1);
 			Configuration::updateValue('MA_MERCHANT_OOS', 1);
 			Configuration::updateValue('MA_CUSTOMER_QTY', 1);
+			Configuration::updateValue('MA_ORDER_CHANGE', 1);
+			Configuration::updateValue('MA_RETURN_SLIP', 1);
 			Configuration::updateValue('MA_MERCHANT_MAILS', Configuration::get('PS_SHOP_EMAIL'));
 			Configuration::updateValue('MA_LAST_QTIES', (int)Configuration::get('PS_LAST_QTIES'));
 			Configuration::updateGlobalValue('MA_MERCHANT_COVERAGE', 0);
@@ -127,6 +133,8 @@ class MailAlerts extends Module
 			Configuration::deleteByName('MA_LAST_QTIES');
 			Configuration::deleteByName('MA_MERCHANT_COVERAGE');
 			Configuration::deleteByName('MA_PRODUCT_COVERAGE');
+			Configuration::deleteByName('MA_ORDER_CHANGE');
+			Configuration::deleteByName('MA_RETURN_SLIP');
 
 			if (!Db::getInstance()->execute('DROP TABLE IF EXISTS '._DB_PREFIX_.MailAlert::$definition['table']))
 				return false;
@@ -202,6 +210,10 @@ class MailAlerts extends Module
 				elseif (!Configuration::updateGlobalValue('MA_MERCHANT_COVERAGE', (int)Tools::getValue('MA_MERCHANT_COVERAGE')))
 					$errors[] = $this->l('Cannot update settings');
 				elseif (!Configuration::updateGlobalValue('MA_PRODUCT_COVERAGE', (int)Tools::getValue('MA_PRODUCT_COVERAGE')))
+					$errors[] = $this->l('Cannot update settings');
+				elseif (!Configuration::updateGlobalValue('MA_ORDER_CHANGE', (int)Tools::getValue('MA_ORDER_CHANGE')))
+					$errors[] = $this->l('Cannot update settings');
+				elseif (!Configuration::updateGlobalValue('MA_RETURN_SLIP', (int)Tools::getValue('MA_RETURN_SLIP')))
 					$errors[] = $this->l('Cannot update settings');
 			}
 		}
@@ -289,15 +301,15 @@ class MailAlerts extends Module
 					$customization_text = preg_replace('/---<br \/>$/', '', $customization_text);
 			}
 
-        		$url = $context->link->getProductLink($product['product_id']);
+			$url = $context->link->getProductLink($product['product_id']);
 			$items_table .=
 				'<tr style="background-color:'.($key % 2 ? '#DDE2E6' : '#EBECEE').';">
 					<td style="padding:0.6em 0.4em;">'.$product['product_reference'].'</td>
 					<td style="padding:0.6em 0.4em;">
 						<strong><a href="'.$url.'">'.$product['product_name'].'</a>'
-                        				.(isset($product['attributes_small']) ? ' '.$product['attributes_small'] : '')
-                        				.(!empty($customization_text) ? '<br />'.$customization_text : '')
-                    				.'</strong>
+							.(isset($product['attributes_small']) ? ' '.$product['attributes_small'] : '')
+							.(!empty($customization_text) ? '<br />'.$customization_text : '')
+						.'</strong>
 					</td>
 					<td style="padding:0.6em 0.4em; text-align:right;">'.Tools::displayPrice($unit_price, $currency, false).'</td>
 					<td style="padding:0.6em 0.4em; text-align:center;">'.(int)$product['product_quantity'].'</td>
@@ -334,17 +346,17 @@ class MailAlerts extends Module
 			'{delivery_block_txt}' => MailAlert::getFormatedAddress($delivery, "\n"),
 			'{invoice_block_txt}' => MailAlert::getFormatedAddress($invoice, "\n"),
 			'{delivery_block_html}' => MailAlert::getFormatedAddress(
-					$delivery, '<br />', array(
-						'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
-						'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
-					)
-				),
+				$delivery, '<br />', array(
+					'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
+					'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
+				)
+			),
 			'{invoice_block_html}' => MailAlert::getFormatedAddress(
-					$invoice, '<br />', array(
-						'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
-						'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
-					)
-				),
+				$invoice, '<br />', array(
+					'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
+					'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
+				)
+			),
 			'{delivery_company}' => $delivery->company,
 			'{delivery_firstname}' => $delivery->firstname,
 			'{delivery_lastname}' => $delivery->lastname,
@@ -379,10 +391,10 @@ class MailAlerts extends Module
 			'{total_discounts}' => Tools::displayPrice($order->total_discounts, $currency),
 			'{total_shipping}' => Tools::displayPrice($order->total_shipping, $currency),
 			'{total_tax_paid}' => Tools::displayPrice(
-					($order->total_products_wt - $order->total_products) + ($order->total_shipping_tax_incl - $order->total_shipping_tax_excl),
-					$currency,
-					false
-				),
+				($order->total_products_wt - $order->total_products) + ($order->total_shipping_tax_incl - $order->total_shipping_tax_excl),
+				$currency,
+				false
+			),
 			'{total_wrapping}' => Tools::displayPrice($order->total_wrapping, $currency),
 			'{currency}' => $currency->sign,
 			'{gift}' => (bool)$order->gift,
@@ -785,6 +797,44 @@ class MailAlerts extends Module
 						'desc' => $this->l('Stock coverage, in days. Also, the stock coverage of a given product will be calculated based on this number.'),
 					),
 					array(
+						'type' => 'switch',
+						'is_bool' => true, //retro compat 1.5
+						'label' => $this->l('Order change'),
+						'name' => 'MA_ORDER_CHANGE',
+						'desc' => $this->l('Receive a notification when an order is modified.'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => 1,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => 0,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
+					array(
+						'type' => 'switch',
+						'is_bool' => true, //retro compat 1.5
+						'label' => $this->l('Returns'),
+						'name' => 'MA_RETURN_SLIP',
+						'desc' => $this->l('Receive a notification when a customer return some products.'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => 1,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => 0,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
+					array(
 						'type' => 'textarea',
 						'cols' => 36,
 						'rows' => 4,
@@ -811,9 +861,9 @@ class MailAlerts extends Module
 		$helper->identifier = $this->identifier;
 		$helper->submit_action = 'submitMailAlertConfiguration';
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
-				.'&configure='.$this->name
-				.'&tab_module='.$this->tab
-				.'&module_name='.$this->name;
+			.'&configure='.$this->name
+			.'&tab_module='.$this->tab
+			.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 		$helper->tpl_vars = array(
 			'fields_value' => $this->getConfigFieldsValues(),
@@ -834,6 +884,8 @@ class MailAlerts extends Module
 			'MA_MERCHANT_COVERAGE' => Tools::getValue('MA_MERCHANT_COVERAGE', Configuration::get('MA_MERCHANT_COVERAGE')),
 			'MA_PRODUCT_COVERAGE' => Tools::getValue('MA_PRODUCT_COVERAGE', Configuration::get('MA_PRODUCT_COVERAGE')),
 			'MA_MERCHANT_MAILS' => Tools::getValue('MA_MERCHANT_MAILS', Configuration::get('MA_MERCHANT_MAILS')),
+			'MA_ORDER_CHANGE' => Tools::getValue('MA_ORDER_CHANGE', Configuration::get('MA_ORDER_CHANGE')),
+			'MA_RETURN_SLIP' => Tools::getValue('MA_RETURN_SLIP', Configuration::get('MA_RETURN_SLIP')),
 		);
 	}
 }
