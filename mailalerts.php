@@ -89,6 +89,7 @@ class MailAlerts extends Module
 			!$this->registerHook('actionProductAttributeDelete') ||
 			!$this->registerHook('actionProductAttributeUpdate') ||
 			!$this->registerHook('actionProductCoverage') ||
+			!$this->registerHook('actionOrderReturn') ||
 			!$this->registerHook('displayHeader'))
 			return false;
 
@@ -678,6 +679,159 @@ class MailAlerts extends Module
 		{
 			$this->context->controller->addJS($this->_path.'js/mailalerts.js');
 			$this->context->controller->addCSS($this->_path.'css/mailalerts.css', 'all');
+		}
+	}
+
+	/**
+	 * Send a mail when a customer return an order.
+	 *
+	 * @param array $params Hook params.
+	 */
+	public function hookActionOrderReturn($params)
+	{
+		if (!$this->return_slip || empty($this->return_slip))
+			return;
+
+		$context = Context::getContext();
+		$id_lang = (int)$context->language->id;
+		$id_shop = (int)$context->shop->id;
+		$configuration = Configuration::getMultiple(
+			array(
+				'PS_SHOP_EMAIL',
+				'PS_MAIL_METHOD',
+				'PS_MAIL_SERVER',
+				'PS_MAIL_USER',
+				'PS_MAIL_PASSWD',
+				'PS_SHOP_NAME',
+				'PS_MAIL_COLOR'
+			), $id_lang, null, $id_shop
+		);
+
+		// Shop iso
+		$iso = Language::getIsoById((int)Configuration::get('PS_LANG_DEFAULT'));
+
+		$order = new Order((int)$params['orderReturn']->id_order);
+		$customer = new Customer((int)$params['orderReturn']->id_customer);
+		$delivery = new Address((int)$order->id_address_delivery);
+		$invoice = new Address((int)$order->id_address_invoice);
+		$order_date_text = Tools::displayDate($order->date_add);
+		if ($delivery->id_state)
+			$delivery_state = new State((int)$delivery->id_state);
+		if ($invoice->id_state)
+			$invoice_state = new State((int)$invoice->id_state);
+
+		$orderReturnProducts = OrderReturn::getOrdersReturnProducts($params['orderReturn']->id, $order);
+
+		$items_table = "";
+		foreach ($orderReturnProducts as $key => $product)
+		{
+			$url = $context->link->getProductLink($product['product_id']);
+			$items_table .=
+				'<tr style="background-color:'.($key % 2 ? '#DDE2E6' : '#EBECEE').';">
+					<td style="padding:0.6em 0.4em;">'.$product['product_reference'].'</td>
+					<td style="padding:0.6em 0.4em;">
+						<strong><a href="'.$url.'">'.$product['product_name'].'</a>
+					</strong>
+					</td>
+					<td style="padding:0.6em 0.4em; text-align:center;">'.(int)$product['product_quantity'].'</td>
+				</tr>';
+		}
+
+		$template_vars = array(
+			'{firstname}' => $customer->firstname,
+			'{lastname}' => $customer->lastname,
+			'{email}' => $customer->email,
+			'{delivery_block_txt}' => MailAlert::getFormatedAddress($delivery, "\n"),
+			'{invoice_block_txt}' => MailAlert::getFormatedAddress($invoice, "\n"),
+			'{delivery_block_html}' => MailAlert::getFormatedAddress(
+				$delivery, '<br />', array(
+					'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
+					'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
+				)
+			),
+			'{invoice_block_html}' => MailAlert::getFormatedAddress(
+				$invoice, '<br />', array(
+					'firstname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>',
+					'lastname' => '<span style="color:'.$configuration['PS_MAIL_COLOR'].'; font-weight:bold;">%s</span>'
+				)
+			),
+			'{delivery_company}' => $delivery->company,
+			'{delivery_firstname}' => $delivery->firstname,
+			'{delivery_lastname}' => $delivery->lastname,
+			'{delivery_address1}' => $delivery->address1,
+			'{delivery_address2}' => $delivery->address2,
+			'{delivery_city}' => $delivery->city,
+			'{delivery_postal_code}' => $delivery->postcode,
+			'{delivery_country}' => $delivery->country,
+			'{delivery_state}' => $delivery->id_state ? $delivery_state->name : '',
+			'{delivery_phone}' => $delivery->phone ? $delivery->phone : $delivery->phone_mobile,
+			'{delivery_other}' => $delivery->other,
+			'{invoice_company}' => $invoice->company,
+			'{invoice_firstname}' => $invoice->firstname,
+			'{invoice_lastname}' => $invoice->lastname,
+			'{invoice_address2}' => $invoice->address2,
+			'{invoice_address1}' => $invoice->address1,
+			'{invoice_city}' => $invoice->city,
+			'{invoice_postal_code}' => $invoice->postcode,
+			'{invoice_country}' => $invoice->country,
+			'{invoice_state}' => $invoice->id_state ? $invoice_state->name : '',
+			'{invoice_phone}' => $invoice->phone ? $invoice->phone : $invoice->phone_mobile,
+			'{invoice_other}' => $invoice->other,
+			'{order_name}' => $order->reference,
+			'{shop_name}' => $configuration['PS_SHOP_NAME'],
+			'{date}' => $order_date_text,
+			'{items}' => $items_table,
+			'{message}' => Tools::purifyHTML($params['orderReturn']->question),
+		);
+
+		// Send 1 email by merchant mail, because Mail::Send doesn't work with an array of recipients
+		$merchant_mails = explode(self::__MA_MAIL_DELIMITOR__, $this->merchant_mails);
+		foreach ($merchant_mails as $merchant_mail)
+		{
+			// Default language
+			$mail_id_lang = $id_lang;
+			$mail_iso = $iso;
+
+			// Use the merchant lang if he exists as an employee
+			$results = Db::getInstance()->executeS('
+				SELECT `id_lang` FROM `'._DB_PREFIX_.'employee`
+				WHERE `email` = \''.pSQL($merchant_mail).'\'
+			');
+			if ($results)
+			{
+				$user_iso = Language::getIsoById((int)$results[0]['id_lang']);
+				if ($user_iso)
+				{
+					$mail_id_lang = (int)$results[0]['id_lang'];
+					$mail_iso = $user_iso;
+				}
+			}
+
+			$dir_mail = false;
+			if (file_exists(dirname(__FILE__).'/mails/'.$mail_iso.'/return_slip.txt') &&
+				file_exists(dirname(__FILE__).'/mails/'.$mail_iso.'/return_slip.html'))
+				$dir_mail = dirname(__FILE__).'/mails/';
+
+			if (file_exists(_PS_MAIL_DIR_.$mail_iso.'/return_slip.txt') &&
+				file_exists(_PS_MAIL_DIR_.$mail_iso.'/return_slip.html'))
+				$dir_mail = _PS_MAIL_DIR_;
+
+			if ($dir_mail)
+				Mail::Send(
+					$mail_id_lang,
+					'return_slip',
+					sprintf(Mail::l('New return from order #%d - %s', $mail_id_lang), $order->id, $order->reference),
+					$template_vars,
+					$merchant_mail,
+					null,
+					$configuration['PS_SHOP_EMAIL'],
+					$configuration['PS_SHOP_NAME'],
+					null,
+					null,
+					$dir_mail,
+					null,
+					$id_shop
+				);
 		}
 	}
 

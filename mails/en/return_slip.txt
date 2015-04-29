@@ -1,0 +1,39 @@
+
+[{shop_url}] 
+
+Congratulations! 
+
+An order was returned to {shop_name} by the following customer:
+{firstname} {lastname} ({email})
+
+Order details 
+
+ORDER: {order_name} Placed on {date}
+
+REFERENCE
+
+PRODUCT
+
+UNIT PRICE
+
+QUANTITY
+
+TOTAL PRICE
+
+{items} 
+
+Delivery address
+
+{delivery_block_html}
+
+Billing address 
+
+{invoice_block_html} 
+
+Customer message: 
+
+{message} 
+
+{shop_name} [{shop_url}] powered by
+PrestaShop(tm) [http://www.prestashop.com/] 
+
