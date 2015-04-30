@@ -984,9 +984,9 @@ class MailAlerts extends Module
 					array(
 						'type' => 'switch',
 						'is_bool' => true, //retro compat 1.5
-						'label' => $this->l('Order change'),
+						'label' => $this->l('Order edit'),
 						'name' => 'MA_ORDER_CHANGE',
-						'desc' => $this->l('Receive a notification when an order is modified.'),
+						'desc' => $this->l('Send a notification to the customer when an order is edited.'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1005,7 +1005,7 @@ class MailAlerts extends Module
 						'is_bool' => true, //retro compat 1.5
 						'label' => $this->l('Returns'),
 						'name' => 'MA_RETURN_SLIP',
-						'desc' => $this->l('Receive a notification when a customer return some products.'),
+						'desc' => $this->l('Receive a notification when a customer requests a merchandise return.'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
