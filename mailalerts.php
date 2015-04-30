@@ -721,10 +721,10 @@ class MailAlerts extends Module
 		if ($invoice->id_state)
 			$invoice_state = new State((int)$invoice->id_state);
 
-		$orderReturnProducts = OrderReturn::getOrdersReturnProducts($params['orderReturn']->id, $order);
+		$order_return_products = OrderReturn::getOrdersReturnProducts($params['orderReturn']->id, $order);
 
-		$items_table = "";
-		foreach ($orderReturnProducts as $key => $product)
+		$items_table = '';
+		foreach ($order_return_products as $key => $product)
 		{
 			$url = $context->link->getProductLink($product['product_id']);
 			$items_table .=
