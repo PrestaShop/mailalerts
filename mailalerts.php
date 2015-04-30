@@ -39,7 +39,7 @@ class MailAlerts extends Module
 	protected $customer_qty;
 	protected $merchant_coverage;
 	protected $product_coverage;
-	protected $order_changed;
+	protected $order_edited;
 	protected $return_slip;
 
 	const __MA_MAIL_DELIMITOR__ = "\n";
@@ -73,7 +73,7 @@ class MailAlerts extends Module
 		$this->customer_qty = (int)Configuration::get('MA_CUSTOMER_QTY');
 		$this->merchant_coverage = (int)Configuration::getGlobalValue('MA_MERCHANT_COVERAGE');
 		$this->product_coverage = (int)Configuration::getGlobalValue('MA_PRODUCT_COVERAGE');
-		$this->order_changed = (int)Configuration::getGlobalValue('MA_ORDER_CHANGE');
+		$this->order_edited = (int)Configuration::getGlobalValue('MA_ORDER_EDIT');
 		$this->return_slip = (int)Configuration::getGlobalValue('MA_RETURN_SLIP');
 	}
 
@@ -90,7 +90,7 @@ class MailAlerts extends Module
 			!$this->registerHook('actionProductAttributeUpdate') ||
 			!$this->registerHook('actionProductCoverage') ||
 			!$this->registerHook('actionOrderReturn') ||
-			!$this->registerHook('actionOrderChanged') ||
+			!$this->registerHook('actionOrderEdited') ||
 			!$this->registerHook('displayHeader'))
 			return false;
 
@@ -99,7 +99,7 @@ class MailAlerts extends Module
 			Configuration::updateValue('MA_MERCHANT_ORDER', 1);
 			Configuration::updateValue('MA_MERCHANT_OOS', 1);
 			Configuration::updateValue('MA_CUSTOMER_QTY', 1);
-			Configuration::updateValue('MA_ORDER_CHANGE', 1);
+			Configuration::updateValue('MA_ORDER_EDIT', 1);
 			Configuration::updateValue('MA_RETURN_SLIP', 1);
 			Configuration::updateValue('MA_MERCHANT_MAILS', Configuration::get('PS_SHOP_EMAIL'));
 			Configuration::updateValue('MA_LAST_QTIES', (int)Configuration::get('PS_LAST_QTIES'));
@@ -135,7 +135,7 @@ class MailAlerts extends Module
 			Configuration::deleteByName('MA_LAST_QTIES');
 			Configuration::deleteByName('MA_MERCHANT_COVERAGE');
 			Configuration::deleteByName('MA_PRODUCT_COVERAGE');
-			Configuration::deleteByName('MA_ORDER_CHANGE');
+			Configuration::deleteByName('MA_ORDER_EDIT');
 			Configuration::deleteByName('MA_RETURN_SLIP');
 
 			if (!Db::getInstance()->execute('DROP TABLE IF EXISTS '._DB_PREFIX_.MailAlert::$definition['table']))
@@ -213,7 +213,7 @@ class MailAlerts extends Module
 					$errors[] = $this->l('Cannot update settings');
 				elseif (!Configuration::updateGlobalValue('MA_PRODUCT_COVERAGE', (int)Tools::getValue('MA_PRODUCT_COVERAGE')))
 					$errors[] = $this->l('Cannot update settings');
-				elseif (!Configuration::updateGlobalValue('MA_ORDER_CHANGE', (int)Tools::getValue('MA_ORDER_CHANGE')))
+				elseif (!Configuration::updateGlobalValue('MA_ORDER_EDIT', (int)Tools::getValue('MA_ORDER_EDIT')))
 					$errors[] = $this->l('Cannot update settings');
 				elseif (!Configuration::updateGlobalValue('MA_RETURN_SLIP', (int)Tools::getValue('MA_RETURN_SLIP')))
 					$errors[] = $this->l('Cannot update settings');
@@ -842,9 +842,9 @@ class MailAlerts extends Module
 	 *
 	 * @param array $params Hook params.
 	 */
-	public function hookActionOrderChanged($params)
+	public function hookActionOrderEdited($params)
 	{
-		if (!$this->order_changed || empty($this->order_changed))
+		if (!$this->order_edited || empty($this->order_edited))
 			return;
 
 		$order = $params['order'];
@@ -881,6 +881,25 @@ class MailAlerts extends Module
 						'label' => $this->l('Product availability'),
 						'name' => 'MA_CUSTOMER_QTY',
 						'desc' => $this->l('Gives the customer the option of receiving a notification when an out-of-stock product is available again.'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => 1,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => 0,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
+					array(
+						'type' => 'switch',
+						'is_bool' => true, //retro compat 1.5
+						'label' => $this->l('Order edit'),
+						'name' => 'MA_ORDER_EDIT',
+						'desc' => $this->l('Send a notification to the customer when an order is edited.'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -984,25 +1003,6 @@ class MailAlerts extends Module
 					array(
 						'type' => 'switch',
 						'is_bool' => true, //retro compat 1.5
-						'label' => $this->l('Order edit'),
-						'name' => 'MA_ORDER_CHANGE',
-						'desc' => $this->l('Send a notification to the customer when an order is edited.'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('Enabled')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('Disabled')
-							)
-						),
-					),
-					array(
-						'type' => 'switch',
-						'is_bool' => true, //retro compat 1.5
 						'label' => $this->l('Returns'),
 						'name' => 'MA_RETURN_SLIP',
 						'desc' => $this->l('Receive a notification when a customer requests a merchandise return.'),
@@ -1069,7 +1069,7 @@ class MailAlerts extends Module
 			'MA_MERCHANT_COVERAGE' => Tools::getValue('MA_MERCHANT_COVERAGE', Configuration::get('MA_MERCHANT_COVERAGE')),
 			'MA_PRODUCT_COVERAGE' => Tools::getValue('MA_PRODUCT_COVERAGE', Configuration::get('MA_PRODUCT_COVERAGE')),
 			'MA_MERCHANT_MAILS' => Tools::getValue('MA_MERCHANT_MAILS', Configuration::get('MA_MERCHANT_MAILS')),
-			'MA_ORDER_CHANGE' => Tools::getValue('MA_ORDER_CHANGE', Configuration::get('MA_ORDER_CHANGE')),
+			'MA_ORDER_EDIT' => Tools::getValue('MA_ORDER_EDIT', Configuration::get('MA_ORDER_EDIT')),
 			'MA_RETURN_SLIP' => Tools::getValue('MA_RETURN_SLIP', Configuration::get('MA_RETURN_SLIP')),
 		);
 	}

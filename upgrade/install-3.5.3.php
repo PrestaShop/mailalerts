@@ -31,11 +31,14 @@ function upgrade_module_3_5_3($object)
 {
     $success = true;
 
-    if(!$object->isRegisteredInHook('actionOrderChanged'))
-        $success &= $object->registerHook('actionOrderChanged');
+    if(!$object->isRegisteredInHook('actionOrderEdited'))
+        $success &= $object->registerHook('actionOrderEdited');
 
     if(!$object->isRegisteredInHook('actionOrderReturn'))
         $success &= $object->registerHook('actionOrderReturn');
+
+    Configuration::updateValue('MA_ORDER_EDIT', 1);
+    Configuration::updateValue('MA_RETURN_SLIP', 1);
 
     return $success;
 }
