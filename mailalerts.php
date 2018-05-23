@@ -48,7 +48,7 @@ class MailAlerts extends Module
 	{
 		$this->name = 'mailalerts';
 		$this->tab = 'administration';
-		$this->version = '3.6.1';
+		$this->version = '3.6.2';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -91,6 +91,9 @@ class MailAlerts extends Module
 			!$this->registerHook('actionProductCoverage') ||
 			!$this->registerHook('actionOrderReturn') ||
 			!$this->registerHook('actionOrderEdited') ||
+			!$this->registerHook('registerGDPRConsent') ||
+			!$this->registerHook('actionDeleteGDPRCustomer') ||
+			!$this->registerHook('actionExportGDPRData') ||
 			!$this->registerHook('displayHeader'))
 			return false;
 
@@ -478,7 +481,8 @@ class MailAlerts extends Module
 		$this->context->smarty->assign(
 			array(
 				'id_product' => $id_product,
-				'id_product_attribute' => $id_product_attribute
+				'id_product_attribute' => $id_product_attribute,
+				'id_module' => $this->id
 			)
 		);
 
@@ -864,6 +868,27 @@ class MailAlerts extends Module
 			$order->getCustomer()->email,
 			$order->getCustomer()->firstname.' '.$order->getCustomer()->lastname,
 			null, null, null, null, _PS_MAIL_DIR_, true, (int)$order->id_shop);
+	}
+
+	public function hookActionDeleteGDPRCustomer($customer)
+	{
+		if (!empty($customer['email']) && Validate::isEmail($customer['email'])) {
+			$sql = "DELETE FROM "._DB_PREFIX_."mailalert_customer_oos WHERE customer_email = '".pSQL($customer['email'])."'";
+			if (Db::getInstance()->execute($sql)) {
+				return json_encode(true);
+			}
+			return json_encode($this->l('Mail alert: Unable to delete customer using email.'));
+		}
+	}
+	public function hookActionExportGDPRData($customer)
+	{
+		if (!Tools::isEmpty($customer['email']) && Validate::isEmail($customer['email'])) {
+			$sql = "SELECT * FROM "._DB_PREFIX_."mailalert_customer_oos WHERE customer_email = '".pSQL($customer['email'])."'";
+			if ($res = Db::getInstance()->ExecuteS($sql)) {
+				return json_encode($res);
+			}
+			return json_encode($this->l('Mail alert: Unable to export customer using email.'));
+		}
 	}
 
 	public function renderForm()
